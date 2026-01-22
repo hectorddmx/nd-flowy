@@ -134,15 +134,26 @@ docker-restart: docker-down docker-build docker-up-d
 ### Dev Containers
 ### ================================ ###
 
+# Generate .env.devcontainer from mise secrets (required before devcontainer-up)
+[group('devcontainer')]
+devcontainer-env:
+    mise exec -- sh -c 'echo WF_API_KEY=$(printenv WF_API_KEY) > .env.devcontainer'
+    @echo "Generated .env.devcontainer"
+
 # Build dev container
 [group('devcontainer')]
-devcontainer-build:
+devcontainer-build: devcontainer-env
     devcontainer build --workspace-folder .
 
-# Start dev container
+# Start dev container (generates env file first)
 [group('devcontainer')]
-devcontainer-up:
+devcontainer-up: devcontainer-env
     devcontainer up --workspace-folder .
+
+# Rebuild dev container from scratch
+[group('devcontainer')]
+devcontainer-rebuild: devcontainer-env
+    devcontainer up --workspace-folder . --remove-existing-container
 
 # Execute command in dev container
 [group('devcontainer')]
