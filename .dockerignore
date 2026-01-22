@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Python
+.venv
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache
+.ruff_cache
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+mise.local.toml
+
+# Database (will be created in container)
+*.db
+
+# Documentation
+docs/
+*.md
+
+# Tests
+tests/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
