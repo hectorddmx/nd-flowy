@@ -60,3 +60,37 @@ These are automatically loaded when using `mise exec --`.
 2. Visit `http://localhost:8000/web/todos` for the plain todos view
 3. Visit `http://localhost:8000/web/kanban` for the kanban board view
 4. Use the refresh button to sync data from Workflowy
+
+## Chrome Extension Integration
+
+Claude Code can interact with the browser via the Claude in Chrome extension. This enables:
+- Taking screenshots to verify UI rendering
+- Clicking elements and filling forms
+- Reading console logs for debugging
+- Inspecting DOM structure
+
+### Setup
+```bash
+# Start Claude Code with Chrome integration
+claude --chrome
+
+# Verify connection
+/chrome
+```
+
+### Common Testing Commands
+```
+# Take a screenshot
+Open localhost:8000/web/todos and take a screenshot
+
+# Test interactions
+Click the Refresh button and wait for it to complete
+
+# Check for errors
+Check the browser console for any JavaScript errors
+
+# Inspect HTML
+Get the HTML structure of the todo list
+```
+
+See `docs/claude/chrome-extension.md` for full documentation.
