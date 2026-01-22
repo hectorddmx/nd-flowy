@@ -311,6 +311,19 @@ def empty_state(message: str):
     )
 
 
+def error_message(title: str, message: str):
+    """Render an error message banner."""
+    return Div(
+        Div(
+            Span(title, cls="font-semibold text-red-300"),
+            Span(message, cls="text-red-200 ml-2"),
+            cls="flex items-center",
+        ),
+        cls="bg-red-900/50 border border-red-700 rounded-lg p-4 mb-4",
+        id="error-banner",
+    )
+
+
 def skeleton_item():
     """Render a skeleton loading item."""
     return Li(

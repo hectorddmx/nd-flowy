@@ -1,8 +1,9 @@
 """FastHTML page routes."""
 
+import httpx
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from fasthtml.common import to_xml
+from fasthtml.common import Div, to_xml
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,8 +12,15 @@ from app.core.database import get_db
 from app.models.database import NodeCache, WipConfig
 from app.services.workflowy_client import WorkflowyClient
 
-from .components import base_page, empty_state, todo_list, todo_list_items
-from .kanban import kanban_page
+from .components import (
+    base_page,
+    empty_state,
+    error_message,
+    filter_input,
+    todo_list,
+    todo_list_items,
+)
+from .kanban import kanban_board_items, kanban_filter_input, kanban_page
 
 router = APIRouter(prefix="/web", tags=["web"])
 
@@ -142,6 +150,10 @@ async def refresh_and_show(
     db: AsyncSession = Depends(get_db),
 ):
     """Refresh data from Workflowy and return updated view."""
+    # Determine which view we're on
+    current_url = request.headers.get("HX-Current-URL", "")
+    is_kanban = "/kanban" in current_url
+
     client = WorkflowyClient(
         api_key=settings.wf_api_key,
         base_url=settings.wf_api_base_url,
@@ -198,12 +210,38 @@ async def refresh_and_show(
 
         await db.commit()
 
+    except httpx.HTTPStatusError as e:
+        # Handle rate limiting
+        if e.response.status_code == 429:
+            error = error_message(
+                "Rate Limited",
+                "Workflowy API allows 1 request per minute. Please wait and try again.",
+            )
+            # Return error with current cached data
+            query = select(NodeCache).where(
+                NodeCache.layout_mode == "todo",
+                NodeCache.breadcrumb.like("WIP%"),
+                NodeCache.completed_at.is_(None),
+            ).order_by(NodeCache.color_priority, NodeCache.priority)
+            result = await db.execute(query)
+            todo_nodes = result.scalars().all()
+
+            if is_kanban:
+                return HTMLResponse(to_xml(Div(
+                    kanban_filter_input("", False),
+                    error,
+                    kanban_board_items(todo_nodes),
+                )))
+            else:
+                return HTMLResponse(to_xml(Div(
+                    filter_input("", False),
+                    error,
+                    todo_list_items(todo_nodes),
+                )))
+        raise
+
     finally:
         await client.close()
-
-    # Determine which view to return based on the current URL
-    current_url = request.headers.get("HX-Current-URL", "")
-    is_kanban = "/kanban" in current_url
 
     # Get nodes (hide completed by default)
     query = select(NodeCache).where(
