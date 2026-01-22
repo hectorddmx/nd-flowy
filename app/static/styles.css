@@ -62,3 +62,111 @@ body {
 .bg-gray-750 {
     background-color: #2d3748;
 }
+
+/* HTMX loading indicator */
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: inline;
+}
+
+.htmx-request.htmx-indicator {
+    display: inline;
+}
+
+/* Button loading state */
+button.htmx-request {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+/* Skeleton pulse animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Workflowy colored spans */
+.colored {
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+.bc-red {
+    background-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+.bc-orange {
+    background-color: rgba(249, 115, 22, 0.3);
+    color: #fdba74;
+}
+
+.bc-yellow {
+    background-color: rgba(234, 179, 8, 0.3);
+    color: #fde047;
+}
+
+.bc-green {
+    background-color: rgba(34, 197, 94, 0.3);
+    color: #86efac;
+}
+
+.bc-blue {
+    background-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+}
+
+.bc-purple {
+    background-color: rgba(168, 85, 247, 0.3);
+    color: #d8b4fe;
+}
+
+.bc-pink {
+    background-color: rgba(236, 72, 153, 0.3);
+    color: #f9a8d4;
+}
+
+.bc-sky {
+    background-color: rgba(14, 165, 233, 0.3);
+    color: #7dd3fc;
+}
+
+.bc-teal {
+    background-color: rgba(20, 184, 166, 0.3);
+    color: #5eead4;
+}
+
+.bc-gray {
+    background-color: rgba(107, 114, 128, 0.3);
+    color: #d1d5db;
+}
+
+/* Workflowy inline code */
+code {
+    background-color: rgba(55, 65, 81, 0.5);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+/* Workflowy links */
+a {
+    color: #60a5fa;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: #93c5fd;
+}

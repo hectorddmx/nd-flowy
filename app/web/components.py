@@ -12,6 +12,7 @@ from fasthtml.common import (
     Main,
     Meta,
     Nav,
+    NotStr,
     Script,
     Span,
     Title,
@@ -56,9 +57,12 @@ def base_page(title: str, *content):
                         ),
                         Button(
                             "Refresh",
-                            hx_post="/api/refresh",
-                            hx_swap="none",
-                            cls="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700",
+                            hx_post="/web/refresh",
+                            hx_target="#main-content",
+                            hx_disabled_elt="this",
+                            cls="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 "
+                            "disabled:opacity-50 disabled:cursor-wait",
+                            **{"hx-on:htmx:before-request": "showSkeleton()"},
                         ),
                         cls="flex gap-2",
                     ),
@@ -81,6 +85,9 @@ def todo_item(node):
     is_completed = node.completed_at is not None
     checkbox_cls = "form-checkbox h-5 w-5 text-blue-600 rounded border-gray-600 bg-gray-700"
 
+    # Render node name as HTML to support Workflowy's colored spans
+    name_content = NotStr(node.name) if node.name else "(unnamed)"
+
     return Li(
         Div(
             Input(
@@ -93,7 +100,7 @@ def todo_item(node):
             ),
             Div(
                 Span(
-                    node.name or "(unnamed)",
+                    name_content,
                     cls=f"text-gray-100 {'line-through text-gray-500' if is_completed else ''}",
                 ),
                 Span(
@@ -162,11 +169,48 @@ def empty_state(message: str):
             Span(message, cls="text-gray-400"),
             Button(
                 "Refresh from Workflowy",
-                hx_post="/api/refresh",
-                hx_swap="none",
+                hx_post="/web/refresh",
+                hx_target="#main-content",
                 cls="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700",
             ),
             cls="text-center py-12",
         ),
         cls="bg-gray-800 rounded-lg p-8",
+    )
+
+
+def skeleton_item():
+    """Render a skeleton loading item."""
+    return Li(
+        Div(
+            Div(cls="w-5 h-5 bg-gray-700 rounded animate-pulse"),
+            Div(
+                Div(cls="h-4 bg-gray-700 rounded w-3/4 animate-pulse"),
+                Div(cls="h-3 bg-gray-700 rounded w-1/2 mt-2 animate-pulse"),
+                cls="ml-3 flex-1",
+            ),
+            cls="flex items-center p-3 bg-gray-800 rounded-lg",
+        ),
+        cls="mb-2",
+    )
+
+
+def skeleton_list():
+    """Render a skeleton loading list."""
+    return Div(
+        Div(
+            Div(cls="h-10 bg-gray-800 rounded-lg w-full animate-pulse"),
+            cls="mb-4",
+        ),
+        Div(
+            Ul(
+                *[skeleton_item() for _ in range(6)],
+                cls="space-y-2",
+            ),
+            Div(
+                Div(cls="h-4 bg-gray-700 rounded w-16 animate-pulse"),
+                cls="mt-4",
+            ),
+            id="todo-list-container",
+        ),
     )
