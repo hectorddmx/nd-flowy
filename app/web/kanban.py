@@ -100,8 +100,11 @@ def kanban_board(nodes):
 
 
 def kanban_filter_input(current_filter: str = "", show_completed: bool = False):
-    """Render the kanban filter input."""
-    return filter_input_field(current_filter, "/web/kanban", "#kanban-board-container", show_completed)
+    """Render the kanban filter input with sticky positioning."""
+    return Div(
+        filter_input_field(current_filter, "/web/kanban", "#kanban-board-container", show_completed),
+        cls="sticky-filter",
+    )
 
 
 def kanban_scripts():
@@ -126,9 +129,19 @@ def kanban_scripts():
                 column._sortable = new Sortable(column, {
                     group: 'kanban',
                     animation: 150,
-                    ghostClass: 'opacity-50',
-                    dragClass: 'shadow-lg',
+                    ghostClass: 'sortable-ghost',
+                    dragClass: 'sortable-drag',
+                    chosenClass: 'sortable-chosen',
+                    onStart: function(evt) {
+                        // Add visual indicator that dragging is active
+                        document.body.classList.add('is-dragging');
+                    },
                     onEnd: function(evt) {
+                        // Remove dragging indicator
+                        document.body.classList.remove('is-dragging');
+                        // Remove any lingering drag-over classes
+                        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+
                         const nodeId = evt.item.dataset.nodeId;
                         const newStatus = evt.to.dataset.status;
                         const oldStatus = evt.item.dataset.currentStatus;
@@ -154,6 +167,14 @@ def kanban_scripts():
                                 // Revert the move on error
                                 evt.from.appendChild(evt.item);
                             });
+                        }
+                    },
+                    onMove: function(evt) {
+                        // Highlight the target column
+                        document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                        const targetWrapper = evt.to.closest('.kanban-column-wrapper');
+                        if (targetWrapper) {
+                            targetWrapper.classList.add('drag-over');
                         }
                     }
                 });
@@ -234,4 +255,5 @@ def kanban_page(nodes, current_filter: str = "", show_completed: bool = False, p
     return Div(
         kanban_filter_input(current_filter, show_completed),
         kanban_board_items(nodes),
+        cls="kanban-container",
     )

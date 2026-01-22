@@ -108,6 +108,17 @@ docker-down:
 docker-logs:
     docker compose logs -f
 
+# Deploy locally (build and start with latest changes)
+[group('docker')]
+deploy:
+    docker compose up --build -d --wait
+    @echo "Deployed at http://localhost:8000"
+
+# Rebuild and restart containers
+[group('docker')]
+docker-restart: docker-down docker-build docker-up-d
+    @echo "Containers restarted"
+
 ### ================================ ###
 ### Dev Containers
 ### ================================ ###

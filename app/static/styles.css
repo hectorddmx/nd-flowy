@@ -208,3 +208,124 @@ a:hover {
     text-orientation: mixed;
     white-space: nowrap;
 }
+
+/* =============================================================================
+   Sticky Layout
+   ============================================================================= */
+
+/* Sticky navigation bar */
+.sticky-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: #1f2937;
+}
+
+/* Sticky filter bar */
+.sticky-filter {
+    position: sticky;
+    top: 73px; /* Height of nav bar */
+    z-index: 40;
+    background-color: #111827;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Kanban board container for scrolling */
+.kanban-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 140px); /* Viewport minus nav and filter */
+    overflow: hidden;
+}
+
+/* Sticky column headers */
+.kanban-column-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+}
+
+.kanban-column-wrapper .column-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #1f2937;
+    margin: -0.75rem -0.75rem 0.75rem -0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.kanban-column-wrapper .column-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 1rem;
+}
+
+/* Kanban board horizontal scroll */
+#kanban-board {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: stretch;
+}
+
+#kanban-board > .kanban-column-wrapper {
+    min-width: 200px;
+    max-width: 300px;
+    height: 100%;
+}
+
+/* =============================================================================
+   Drag and Drop Improvements
+   ============================================================================= */
+
+/* Drop zone highlight when dragging over */
+.kanban-column.sortable-chosen {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Column highlight when dragging over it */
+.kanban-column-wrapper.drag-over .column-content {
+    background-color: rgba(59, 130, 246, 0.15);
+    border: 2px dashed #3b82f6;
+    border-radius: 0.5rem;
+}
+
+/* Better ghost styling */
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #374151 !important;
+    border: 2px dashed #6b7280 !important;
+}
+
+/* Dragging card styling */
+.sortable-drag {
+    opacity: 1;
+    transform: rotate(2deg);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Empty column drop zone */
+.kanban-column:empty::after {
+    content: "Drop here";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    border: 2px dashed #4b5563;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Highlight empty column on drag */
+.kanban-column:empty.sortable-chosen::after {
+    border-color: #3b82f6;
+    color: #60a5fa;
+    background-color: rgba(59, 130, 246, 0.1);
+}

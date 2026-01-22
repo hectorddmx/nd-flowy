@@ -226,7 +226,7 @@ def base_page(title: str, *content):
                     ),
                     cls="container mx-auto flex justify-between items-center",
                 ),
-                cls="bg-gray-800 p-4 border-b border-gray-700",
+                cls="sticky-nav bg-gray-800 p-4 border-b border-gray-700",
             ),
             Main(
                 *content,
