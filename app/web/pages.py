@@ -30,9 +30,13 @@ async def index(request: Request):
 async def todos_page(
     request: Request,
     filter_text: str = "",
+    show_completed: str = "",
     db: AsyncSession = Depends(get_db),
 ):
     """Render the todos list page."""
+    # Parse show_completed (checkbox sends "true" when checked, empty when not)
+    show_completed_bool = show_completed == "true"
+
     # Check if WIP node is configured
     wip_result = await db.execute(select(WipConfig).limit(1))
     wip_config = wip_result.scalar_one_or_none()
@@ -49,6 +53,10 @@ async def todos_page(
         NodeCache.layout_mode == "todo",
         NodeCache.breadcrumb.like("WIP%"),
     )
+
+    # Filter out completed items unless show_completed is true
+    if not show_completed_bool:
+        query = query.where(NodeCache.completed_at.is_(None))
 
     # Apply text filter
     if filter_text:
@@ -68,7 +76,7 @@ async def todos_page(
 
     page = base_page(
         "Todos - Workflowy Flow",
-        todo_list(nodes, filter_text),
+        todo_list(nodes, filter_text, show_completed_bool),
     )
     return HTMLResponse(to_xml(page))
 
@@ -77,9 +85,13 @@ async def todos_page(
 async def kanban_view(
     request: Request,
     filter_text: str = "",
+    show_completed: str = "",
     db: AsyncSession = Depends(get_db),
 ):
     """Render the kanban board page."""
+    # Parse show_completed (checkbox sends "true" when checked, empty when not)
+    show_completed_bool = show_completed == "true"
+
     # Check if WIP node is configured
     wip_result = await db.execute(select(WipConfig).limit(1))
     wip_config = wip_result.scalar_one_or_none()
@@ -97,6 +109,10 @@ async def kanban_view(
         NodeCache.breadcrumb.like("WIP%"),
     )
 
+    # Filter out completed items unless show_completed is true
+    if not show_completed_bool:
+        query = query.where(NodeCache.completed_at.is_(None))
+
     # Apply text filter
     if filter_text:
         filters = [f.strip() for f in filter_text.split(",") if f.strip()]
@@ -111,11 +127,11 @@ async def kanban_view(
 
     # Check if this is an HTMX request (partial update)
     if request.headers.get("HX-Request"):
-        return HTMLResponse(to_xml(kanban_page(nodes, filter_text, partial=True)))
+        return HTMLResponse(to_xml(kanban_page(nodes, filter_text, show_completed_bool, partial=True)))
 
     page = base_page(
         "Kanban - Workflowy Flow",
-        kanban_page(nodes, filter_text),
+        kanban_page(nodes, filter_text, show_completed_bool),
     )
     return HTMLResponse(to_xml(page))
 
@@ -185,13 +201,14 @@ async def refresh_and_show(
     finally:
         await client.close()
 
-    # Now return the updated todo list
+    # Now return the updated todo list (hide completed by default)
     query = select(NodeCache).where(
         NodeCache.layout_mode == "todo",
         NodeCache.breadcrumb.like("WIP%"),
+        NodeCache.completed_at.is_(None),
     ).order_by(NodeCache.color_priority, NodeCache.priority)
 
     result = await db.execute(query)
     todo_nodes = result.scalars().all()
 
-    return HTMLResponse(to_xml(todo_list(todo_nodes, "")))
+    return HTMLResponse(to_xml(todo_list(todo_nodes, "", False)))

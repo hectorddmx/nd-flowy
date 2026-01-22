@@ -99,9 +99,9 @@ def kanban_board(nodes):
     )
 
 
-def kanban_filter_input(current_filter: str = ""):
+def kanban_filter_input(current_filter: str = "", show_completed: bool = False):
     """Render the kanban filter input."""
-    return filter_input_field(current_filter, "/web/kanban", "#kanban-board-container")
+    return filter_input_field(current_filter, "/web/kanban", "#kanban-board-container", show_completed)
 
 
 def kanban_scripts():
@@ -216,13 +216,13 @@ def kanban_board_items(nodes):
     )
 
 
-def kanban_page(nodes, current_filter: str = "", partial: bool = False):
+def kanban_page(nodes, current_filter: str = "", show_completed: bool = False, partial: bool = False):
     """Render the full kanban page content."""
     if partial:
         # Return only the board container for HTMX updates
         return kanban_board_items(nodes)
 
     return Div(
-        kanban_filter_input(current_filter),
+        kanban_filter_input(current_filter, show_completed),
         kanban_board_items(nodes),
     )

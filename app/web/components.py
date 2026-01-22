@@ -63,20 +63,46 @@ def render_node_name(name: str | None, is_completed: bool = False):
     return Span(name_content, cls=completed_cls)
 
 
-def filter_input_field(current_filter: str = "", target_url: str = "/web/todos", htmx_target: str = "#todo-list-container"):
-    """Render a reusable filter input component."""
+def filter_input_field(
+    current_filter: str = "",
+    target_url: str = "/web/todos",
+    htmx_target: str = "#todo-list-container",
+    show_completed: bool = False,
+):
+    """Render a reusable filter input component with completed toggle."""
     return Form(
-        Input(
-            type="text",
-            name="filter_text",
-            value=current_filter,
-            placeholder="Filter by name or project (comma-separated)...",
-            cls="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg "
-            "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
-            hx_get=target_url,
-            hx_trigger="keyup changed delay:300ms",
-            hx_target=htmx_target,
-            hx_push_url="true",
+        Div(
+            Input(
+                type="text",
+                name="filter_text",
+                value=current_filter,
+                placeholder="Filter by name or project (comma-separated)...",
+                cls="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg "
+                "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
+                hx_get=target_url,
+                hx_trigger="keyup changed delay:300ms",
+                hx_target=htmx_target,
+                hx_push_url="true",
+                hx_include="closest form",
+            ),
+            Div(
+                Input(
+                    type="checkbox",
+                    name="show_completed",
+                    value="true",
+                    checked=show_completed,
+                    id="show-completed-toggle",
+                    cls="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-600 bg-gray-700",
+                    hx_get=target_url,
+                    hx_trigger="change",
+                    hx_target=htmx_target,
+                    hx_push_url="true",
+                    hx_include="closest form",
+                ),
+                Span("Show completed", cls="ml-2 text-sm text-gray-400"),
+                cls="flex items-center ml-4",
+            ),
+            cls="flex items-center",
         ),
         cls="mb-4",
     )
@@ -208,9 +234,9 @@ def todo_item(node):
     )
 
 
-def filter_input(current_filter: str = ""):
+def filter_input(current_filter: str = "", show_completed: bool = False):
     """Render the filter input component for todos view."""
-    return filter_input_field(current_filter, "/web/todos", "#todo-list-container")
+    return filter_input_field(current_filter, "/web/todos", "#todo-list-container", show_completed)
 
 
 def todo_list_items(nodes):
@@ -228,10 +254,10 @@ def todo_list_items(nodes):
     )
 
 
-def todo_list(nodes, current_filter: str = ""):
+def todo_list(nodes, current_filter: str = "", show_completed: bool = False):
     """Render the full todo list with filter."""
     return Div(
-        filter_input(current_filter),
+        filter_input(current_filter, show_completed),
         todo_list_items(nodes),
     )
 
