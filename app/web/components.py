@@ -35,6 +35,39 @@ def base_page(title: str, *content):
             Script(src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"),
             # Custom styles for dark theme
             Link(rel="stylesheet", href="/static/styles.css"),
+            # Skeleton loading script
+            Script("""
+                function showSkeleton() {
+                    const main = document.getElementById('main-content');
+                    if (main) {
+                        main.innerHTML = `
+                            <div>
+                                <div class="mb-4">
+                                    <div class="h-10 bg-gray-800 rounded-lg w-full animate-pulse"></div>
+                                </div>
+                                <div id="todo-list-container">
+                                    <ul class="space-y-2">
+                                        ${Array(6).fill().map(() => `
+                                            <li class="mb-2">
+                                                <div class="flex items-center p-3 bg-gray-800 rounded-lg">
+                                                    <div class="w-5 h-5 bg-gray-700 rounded animate-pulse"></div>
+                                                    <div class="ml-3 flex-1">
+                                                        <div class="h-4 bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                                                        <div class="h-3 bg-gray-700 rounded w-1/2 mt-2 animate-pulse"></div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                    <div class="mt-4">
+                                        <div class="h-4 bg-gray-700 rounded w-20 animate-pulse"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            """),
         ),
         Div(
             Nav(
