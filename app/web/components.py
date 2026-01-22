@@ -1,5 +1,6 @@
 """Reusable FastHTML components."""
 
+import os
 import re
 
 from fasthtml.common import (
@@ -21,6 +22,9 @@ from fasthtml.common import (
     Title,
     Ul,
 )
+
+# Check if we're in debug mode for hot reload
+DEBUG = os.getenv("DEBUG", "").lower() in ("true", "1", "yes")
 
 # Regex to match status tags in node names
 STATUS_TAG_PATTERN = re.compile(r"\s*#(BACKLOG|BLOCKED|TODO|WIP|TEST|DONE)\b", re.IGNORECASE)
@@ -157,7 +161,7 @@ def base_page(title: str, *content):
             Link(rel="stylesheet", href="/static/styles.css"),
             # Ensure html/body have dark background
             Style("html, body { background-color: #111827; margin: 0; padding: 0; }"),
-            # Hot reload script for development (connects to /hot-reload WebSocket)
+            # Hot reload script for development (only included when DEBUG=true)
             Script("""
                 (function() {
                     if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
@@ -172,7 +176,7 @@ def base_page(title: str, *content):
                         }, 1000);
                     };
                 })();
-            """),
+            """) if DEBUG else "",
             # Helper to preserve filter params when switching tabs
             Script("""
                 document.addEventListener('htmx:configRequest', function(evt) {
