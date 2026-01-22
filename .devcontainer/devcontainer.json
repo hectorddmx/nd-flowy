@@ -1,0 +1,48 @@
+{
+  "name": "Workflowy Flow",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/app/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true
+        }
+      }
+    }
+  },
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "Workflowy Flow App",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "uv sync",
+  "postStartCommand": "echo 'Dev container ready. Run: uv run uvicorn app.main:app --reload --host 0.0.0.0'",
+  "remoteUser": "root",
+  "workspaceFolder": "/app",
+  "mounts": [
+    "source=${localWorkspaceFolder}/workflowy_flow.db,target=/app/workflowy_flow.db,type=bind,consistency=cached"
+  ],
+  "containerEnv": {
+    "WF_API_KEY": "${localEnv:WF_API_KEY}",
+    "DATABASE_PATH": "/app/workflowy_flow.db"
+  }
+}
