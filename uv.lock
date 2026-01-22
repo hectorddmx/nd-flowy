@@ -116,6 +116,19 @@ wheels = [
 ]
 
 [[package]]
+name = "arel"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "starlette" },
+    { name = "watchfiles" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4e/46/a1a8634e7e6b8f0cd86021cc428127671c71457dc051da703b55ea8d90ec/arel-0.4.0.tar.gz", hash = "sha256:08b2f72f767a84825a649891eb30f20f89c0de6aa67134939691ee0012aafc73", size = 14065, upload-time = "2025-09-22T16:39:19.529Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/86/a3/a70c2c3bcb50254522f997298f90a44ba698a60a47efb40d9cceab31a4f5/arel-0.4.0-py3-none-any.whl", hash = "sha256:7b1fe5d10c06a6f231cfeec79e48888176931b86f0ae6e432196845edf818109", size = 8263, upload-time = "2025-09-22T16:39:18.277Z" },
+]
+
+[[package]]
 name = "beautifulsoup4"
 version = "4.14.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1310,6 +1323,7 @@ dependencies = [
 
 [package.optional-dependencies]
 dev = [
+    { name = "arel" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-httpx" },
@@ -1319,6 +1333,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.19.0" },
+    { name = "arel", marker = "extra == 'dev'", specifier = ">=0.3.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.104.0" },
     { name = "greenlet", specifier = ">=3.0.0" },
     { name = "httpx", specifier = ">=0.24.0" },

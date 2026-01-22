@@ -70,20 +70,52 @@ def filter_input_field(
     show_completed: bool = False,
 ):
     """Render a reusable filter input component with completed toggle."""
+    # Search icon SVG
+    search_icon = NotStr(
+        '<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" '
+        'd="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>'
+    )
+    # Clear icon SVG
+    clear_icon = NotStr(
+        '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">'
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" '
+        'd="M6 18L18 6M6 6l12 12"></path></svg>'
+    )
+
     return Form(
         Div(
-            Input(
-                type="text",
-                name="filter_text",
-                value=current_filter,
-                placeholder="Filter by name or project (comma-separated)...",
-                cls="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg "
-                "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
-                hx_get=target_url,
-                hx_trigger="keyup changed delay:300ms",
-                hx_target=htmx_target,
-                hx_push_url="true",
-                hx_include="closest form",
+            # Search input with icons
+            Div(
+                # Search icon on the left
+                Span(
+                    search_icon,
+                    cls="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none",
+                ),
+                Input(
+                    type="text",
+                    name="filter_text",
+                    value=current_filter,
+                    placeholder="Filter by name or project (comma-separated)...",
+                    cls="w-full pl-10 pr-10 py-2 bg-gray-800 border border-gray-700 rounded-lg "
+                    "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
+                    hx_get=target_url,
+                    hx_trigger="keyup changed delay:300ms",
+                    hx_target=htmx_target,
+                    hx_push_url="true",
+                    hx_include="closest form",
+                    id="filter-input",
+                ),
+                # Clear button on the right
+                Button(
+                    clear_icon,
+                    type="button",
+                    cls=f"absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 "
+                    f"{'hidden' if not current_filter else ''}",
+                    id="filter-clear-btn",
+                    onclick="clearFilter(this)",
+                ),
+                cls="relative flex-1",
             ),
             Div(
                 Input(
@@ -104,7 +136,7 @@ def filter_input_field(
             ),
             cls="flex items-center",
         ),
-        cls="mb-4",
+        cls="mb-2",
     )
 
 
@@ -125,6 +157,63 @@ def base_page(title: str, *content):
             Link(rel="stylesheet", href="/static/styles.css"),
             # Ensure html/body have dark background
             Style("html, body { background-color: #111827; margin: 0; padding: 0; }"),
+            # Hot reload script for development (connects to /hot-reload WebSocket)
+            Script("""
+                (function() {
+                    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') return;
+                    var ws = new WebSocket('ws://' + window.location.host + '/hot-reload');
+                    ws.onmessage = function(event) {
+                        if (event.data === 'reload') window.location.reload();
+                    };
+                    ws.onclose = function() {
+                        setTimeout(function() {
+                            var newWs = new WebSocket('ws://' + window.location.host + '/hot-reload');
+                            newWs.onopen = function() { window.location.reload(); };
+                        }, 1000);
+                    };
+                })();
+            """),
+            # Helper to preserve filter params when switching tabs
+            Script("""
+                document.addEventListener('htmx:configRequest', function(evt) {
+                    const el = evt.detail.elt;
+                    if (!el.classList.contains('nav-tab-btn')) return;
+
+                    const filterInput = document.querySelector('input[name="filter_text"]');
+                    const showCompleted = document.querySelector('input[name="show_completed"]');
+
+                    if (filterInput && filterInput.value) {
+                        evt.detail.parameters['filter_text'] = filterInput.value;
+                    }
+                    if (showCompleted && showCompleted.checked) {
+                        evt.detail.parameters['show_completed'] = 'true';
+                    }
+                });
+
+                function clearFilter(btn) {
+                    const input = document.getElementById('filter-input');
+                    if (input) {
+                        input.value = '';
+                        btn.classList.add('hidden');
+                        // Trigger HTMX request
+                        htmx.trigger(input, 'keyup');
+                    }
+                }
+
+                // Show/hide clear button based on input value
+                document.addEventListener('input', function(evt) {
+                    if (evt.target.id === 'filter-input') {
+                        const clearBtn = document.getElementById('filter-clear-btn');
+                        if (clearBtn) {
+                            if (evt.target.value) {
+                                clearBtn.classList.remove('hidden');
+                            } else {
+                                clearBtn.classList.add('hidden');
+                            }
+                        }
+                    }
+                });
+            """),
             # Skeleton loading script
             Script("""
                 function showSkeleton() {
@@ -201,14 +290,16 @@ def base_page(title: str, *content):
                             hx_get="/web/todos",
                             hx_target="#main-content",
                             hx_push_url="true",
-                            cls="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded",
+                            cls="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded nav-tab-btn",
+                            data_base_url="/web/todos",
                         ),
                         Button(
                             "Kanban",
                             hx_get="/web/kanban",
                             hx_target="#main-content",
                             hx_push_url="true",
-                            cls="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded",
+                            cls="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded nav-tab-btn",
+                            data_base_url="/web/kanban",
                         ),
                         Button(
                             "Refresh",
@@ -224,14 +315,14 @@ def base_page(title: str, *content):
                         ),
                         cls="flex gap-2",
                     ),
-                    cls="container mx-auto flex justify-between items-center",
+                    cls="flex justify-between items-center",
                 ),
-                cls="sticky-nav bg-gray-800 p-4 border-b border-gray-700",
+                cls="sticky-nav bg-gray-800 px-4 py-2 border-b border-gray-700",
             ),
             Main(
                 *content,
                 id="main-content",
-                cls="container mx-auto p-4",
+                cls="px-2",
             ),
             cls="min-h-screen bg-gray-900 text-gray-100",
         ),
@@ -248,7 +339,7 @@ def todo_item(node):
             Input(
                 type="checkbox",
                 checked=is_completed,
-                hx_post=f"/api/nodes/{node.id}/{'uncomplete' if is_completed else 'complete'}",
+                hx_post=f"/web/nodes/{node.id}/{'uncomplete' if is_completed else 'complete'}",
                 hx_swap="outerHTML",
                 hx_target="closest li",
                 cls=checkbox_cls,
@@ -270,8 +361,11 @@ def todo_item(node):
 
 
 def filter_input(current_filter: str = "", show_completed: bool = False):
-    """Render the filter input component for todos view."""
-    return filter_input_field(current_filter, "/web/todos", "#todo-list-container", show_completed)
+    """Render the filter input component for todos view with sticky positioning."""
+    return Div(
+        filter_input_field(current_filter, "/web/todos", "#todo-list-container", show_completed),
+        cls="sticky-filter",
+    )
 
 
 def todo_list_items(nodes):

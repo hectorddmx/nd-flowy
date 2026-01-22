@@ -1,5 +1,7 @@
 """FastHTML page routes."""
 
+from datetime import datetime
+
 import httpx
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
@@ -12,11 +14,20 @@ from app.core.database import get_db
 from app.models.database import NodeCache, WipConfig
 from app.services.workflowy_client import WorkflowyClient
 
+
+def get_workflowy_client() -> WorkflowyClient:
+    """Get Workflowy client instance."""
+    return WorkflowyClient(
+        api_key=settings.wf_api_key,
+        base_url=settings.wf_api_base_url,
+    )
+
 from .components import (
     base_page,
     empty_state,
     error_message,
     filter_input,
+    todo_item,
     todo_list,
     todo_list_items,
 )
@@ -267,3 +278,51 @@ async def refresh_and_show(
         return HTMLResponse(to_xml(kanban_page(todo_nodes, "", False)))
     else:
         return HTMLResponse(to_xml(todo_list(todo_nodes, "", False)))
+
+
+@router.post("/nodes/{node_id}/complete", response_class=HTMLResponse)
+async def complete_node_web(
+    node_id: str,
+    db: AsyncSession = Depends(get_db),
+    client: WorkflowyClient = Depends(get_workflowy_client),
+):
+    """Mark a node as complete and return updated HTML."""
+    try:
+        await client.complete_node(node_id)
+
+        # Update cache
+        result = await db.execute(select(NodeCache).where(NodeCache.id == node_id))
+        node = result.scalar_one_or_none()
+        if node:
+            node.completed_at = datetime.now()
+            await db.commit()
+            await db.refresh(node)
+            return HTMLResponse(to_xml(todo_item(node)))
+
+        return HTMLResponse("")
+    finally:
+        await client.close()
+
+
+@router.post("/nodes/{node_id}/uncomplete", response_class=HTMLResponse)
+async def uncomplete_node_web(
+    node_id: str,
+    db: AsyncSession = Depends(get_db),
+    client: WorkflowyClient = Depends(get_workflowy_client),
+):
+    """Mark a node as incomplete and return updated HTML."""
+    try:
+        await client.uncomplete_node(node_id)
+
+        # Update cache
+        result = await db.execute(select(NodeCache).where(NodeCache.id == node_id))
+        node = result.scalar_one_or_none()
+        if node:
+            node.completed_at = None
+            await db.commit()
+            await db.refresh(node)
+            return HTMLResponse(to_xml(todo_item(node)))
+
+        return HTMLResponse("")
+    finally:
+        await client.close()

@@ -58,13 +58,13 @@ def kanban_column(status: StatusTag, title: str, nodes):
         Div(
             H2(
                 title,
-                cls="font-semibold text-gray-100",
+                cls="font-semibold text-gray-100 text-sm",
             ),
             Span(
                 str(count),
                 cls=f"ml-2 px-2 py-0.5 text-xs rounded-full {bg_color} text-white",
             ),
-            cls="flex items-center mb-3 pb-2 border-b border-gray-700 cursor-pointer column-header",
+            cls="flex items-center pb-2 border-b border-gray-700 cursor-pointer column-header",
         ),
         # Collapsed header (visible when collapsed)
         Div(
@@ -74,18 +74,18 @@ def kanban_column(status: StatusTag, title: str, nodes):
             ),
             Span(
                 title,
-                cls="font-semibold text-gray-100 writing-vertical",
+                cls="font-semibold text-gray-100 writing-vertical text-sm",
             ),
             cls="hidden flex-col items-center py-2 cursor-pointer collapsed-header",
         ),
-        # Column content
+        # Column content (scrollable)
         Div(
             *[kanban_card(node) for node in column_nodes],
-            cls="kanban-column min-h-[200px] space-y-2 column-content",
+            cls="kanban-column space-y-1 column-content",
             data_status=status.value,
             id=f"column-{status.value.lower()}",
         ),
-        cls="flex-1 min-w-0 p-3 bg-gray-800 rounded-lg kanban-column-wrapper",
+        cls="flex-1 min-w-0 p-2 bg-gray-800 rounded-lg kanban-column-wrapper",
         data_column=status.value,
     )
 
@@ -111,12 +111,19 @@ def kanban_scripts():
     """JavaScript for kanban drag and drop functionality."""
     return Script("""
         document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('kanban-view');
             initKanban();
             initColumnToggle();
             restoreCollapsedState();
         });
 
-        document.addEventListener('htmx:afterSwap', function() {
+        document.addEventListener('htmx:afterSwap', function(evt) {
+            // Toggle kanban-view class based on current view
+            if (window.location.pathname.includes('/kanban')) {
+                document.body.classList.add('kanban-view');
+            } else {
+                document.body.classList.remove('kanban-view');
+            }
             initKanban();
             initColumnToggle();
             restoreCollapsedState();
@@ -182,16 +189,27 @@ def kanban_scripts():
         }
 
         function initColumnToggle() {
-            // Use event delegation for column header clicks
-            document.querySelectorAll('.column-header, .collapsed-header').forEach(function(header) {
-                if (header._toggleInit) return; // Already initialized
+            // Handle clicks on column headers to collapse
+            document.querySelectorAll('.column-header').forEach(function(header) {
+                if (header._toggleInit) return;
                 header._toggleInit = true;
-
                 header.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const wrapper = this.closest('.kanban-column-wrapper');
                     if (wrapper) {
                         toggleColumn(wrapper);
+                    }
+                });
+            });
+
+            // Handle clicks anywhere on collapsed column to expand
+            document.querySelectorAll('.kanban-column-wrapper').forEach(function(wrapper) {
+                if (wrapper._expandInit) return;
+                wrapper._expandInit = true;
+                wrapper.addEventListener('click', function(e) {
+                    if (this.classList.contains('collapsed')) {
+                        e.stopPropagation();
+                        toggleColumn(this);
                     }
                 });
             });
@@ -255,5 +273,4 @@ def kanban_page(nodes, current_filter: str = "", show_completed: bool = False, p
     return Div(
         kanban_filter_input(current_filter, show_completed),
         kanban_board_items(nodes),
-        cls="kanban-container",
     )

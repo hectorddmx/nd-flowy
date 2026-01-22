@@ -1,5 +1,6 @@
 """FastAPI + FastHTML application for Workflowy Flow."""
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -12,14 +13,35 @@ from app.core.database import init_db
 from app.routers import api_router, health_router
 from app.web.pages import router as web_router
 
+# Development hot reload
+DEBUG = os.getenv("DEBUG", "").lower() in ("true", "1", "yes")
+hot_reload = None
+
+if DEBUG:
+    try:
+        import arel
+
+        hot_reload = arel.HotReload(
+            paths=[
+                arel.Path("app"),
+                arel.Path("app/static"),
+            ]
+        )
+    except ImportError:
+        pass
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     # Startup
     await init_db()
+    if hot_reload:
+        await hot_reload.startup()
     yield
-    # Shutdown (cleanup if needed)
+    # Shutdown
+    if hot_reload:
+        await hot_reload.shutdown()
 
 
 app = FastAPI(
@@ -28,6 +50,10 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Add hot reload WebSocket route in debug mode
+if hot_reload:
+    app.add_websocket_route("/hot-reload", route=hot_reload, name="hot-reload")
 
 # Mount static files
 static_dir = Path(__file__).parent / "static"

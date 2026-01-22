@@ -36,15 +36,26 @@ bootstrap: setup install
 ### Development Server
 ### ================================ ###
 
-# Run the development server
+# Run the development server with live reload (watches py, html, css, js files)
 [group('dev')]
 run:
+    DEBUG=true uv run uvicorn app.main:app --reload --port 8000 \
+        --reload-include '*.html' \
+        --reload-include '*.css' \
+        --reload-include '*.js'
+
+# Run development server (basic, Python files only)
+[group('dev')]
+run-basic:
     uv run uvicorn app.main:app --reload --port 8000
 
 # Run the development server on all interfaces (for containers)
 [group('dev')]
 run-host:
-    uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    DEBUG=true uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 \
+        --reload-include '*.html' \
+        --reload-include '*.css' \
+        --reload-include '*.js'
 
 ### ================================ ###
 ### Testing & Quality
