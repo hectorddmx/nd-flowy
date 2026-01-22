@@ -1,5 +1,7 @@
 # Secrets
 mise.local.toml
+.env
+.env.*
 
 # Python
 __pycache__/

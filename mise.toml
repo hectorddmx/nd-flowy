@@ -4,3 +4,12 @@ node = "lts"
 just = "latest"
 uv = "latest"
 ruff = "latest"
+
+[env]
+# Required: Set in mise.local.toml (gitignored)
+_.file = [".env.{{ env.MISE_ENV | default(value='development') }}"]
+WF_API_KEY = "{{ env.WF_API_KEY }}"
+
+# Optional with defaults
+WF_API_BASE_URL = "https://workflowy.com/api/v1"
+DATABASE_PATH = "workflowy_flow.db"

@@ -43,6 +43,36 @@ Secrets are stored in `mise.local.toml` which is gitignored. The following envir
 
 These are automatically loaded when using `mise exec --`.
 
+### Generating .env files for Docker
+
+To generate environment files for Docker from mise configuration:
+
+```bash
+# Generate .env for current environment
+mise env --dotenv > .env.development
+
+# Generate with specific environment
+MISE_ENV=production mise env --dotenv > .env.production
+```
+
+Note: `.env*` files are gitignored and should never be committed.
+
+## Git Safety Guidelines
+
+**NEVER do the following without explicit user request:**
+- Force push (`git push --force`)
+- Hard reset (`git reset --hard`)
+- Delete branches (`git branch -D`)
+- Skip hooks (`--no-verify`)
+- Amend commits that may have been pushed
+
+**Safe practices:**
+- Always test changes before merging
+- Use safe delete patterns (`git branch -d` not `-D`)
+- Create new commits instead of amending when in doubt
+- Verify branch status before destructive operations
+- Never merge untested code to main
+
 ## Project Structure
 
 - `app/` - Main application code
