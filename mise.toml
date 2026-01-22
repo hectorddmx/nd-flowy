@@ -1,0 +1,6 @@
+[tools]
+python = "3.12"
+node = "lts"
+just = "latest"
+uv = "latest"
+ruff = "latest"
