@@ -39,7 +39,7 @@ mise exec -- just check
 
 Secrets are stored in `mise.local.toml` which is gitignored. The following environment variables are required:
 
-- `WF_API_KEY` - Workflowy API key for authentication
+- `WF_API_KEY` - Workflowy API key for authentication (see [API Keys Guide](docs/workflowy/api-keys.md))
 
 These are automatically loaded when using `mise exec --`.
 
@@ -124,3 +124,16 @@ Get the HTML structure of the todo list
 ```
 
 See `docs/claude/chrome-extension.md` for full documentation.
+
+## Documentation
+
+### WorkFlowy
+- [About WorkFlowy](docs/workflowy/about.md) - What is WorkFlowy, features, pricing, and account setup
+- [API Keys](docs/workflowy/api-keys.md) - How to obtain and manage your WorkFlowy API key
+- [API Reference](docs/workflowy/readme.md) - REST API endpoints and usage
+
+### Tools & Development
+- [mise](docs/mise/readme.md) - Environment and tool version management
+- [just](docs/just/readme.md) - Command runner for common tasks
+- [Devcontainers](docs/devcontainers/readme.md) - Development container setup
+- [Chrome Extension](docs/claude/chrome-extension.md) - Browser automation with Claude
