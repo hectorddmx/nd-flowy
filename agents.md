@@ -136,5 +136,6 @@ See `docs/claude/chrome-extension.md` for full documentation.
 - [mise](docs/mise/readme.md) - Environment and tool version management
 - [just](docs/just/readme.md) - Command runner for common tasks
 - [Devcontainers](docs/devcontainers/readme.md) - Development container setup
+- [Devcontainer Logs & Domains](docs/devcontainers/logs-domains.md) - Finding containers, URLs, and viewing logs
 - [OrbStack](docs/orbstack/local-domains-and-https.md) - Local domains and HTTPS for containers
 - [Chrome Extension](docs/claude/chrome-extension.md) - Browser automation with Claude
