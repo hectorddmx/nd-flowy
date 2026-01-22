@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.database import NodeCache, WipConfig
 
-from .components import base_page, empty_state, todo_list
+from .components import base_page, empty_state, todo_list, todo_list_items
 from .kanban import kanban_page
 
 router = APIRouter(prefix="/web", tags=["web"])
@@ -61,7 +61,7 @@ async def todos_page(
 
     # Check if this is an HTMX request (partial update)
     if request.headers.get("HX-Request"):
-        return HTMLResponse(str(todo_list(nodes, filter_text)))
+        return HTMLResponse(str(todo_list_items(nodes)))
 
     page = base_page(
         "Todos - Workflowy Flow",

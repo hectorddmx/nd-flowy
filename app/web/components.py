@@ -125,26 +125,33 @@ def filter_input(current_filter: str = ""):
             "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
             hx_get="/web/todos",
             hx_trigger="keyup changed delay:300ms",
-            hx_target="#todo-list",
+            hx_target="#todo-list-container",
             hx_push_url="true",
         ),
         cls="mb-4",
     )
 
 
-def todo_list(nodes, current_filter: str = ""):
-    """Render the todo list."""
+def todo_list_items(nodes):
+    """Render just the todo list items and count (for HTMX partial updates)."""
     return Div(
-        filter_input(current_filter),
         Ul(
             *[todo_item(node) for node in nodes],
-            id="todo-list",
             cls="space-y-2",
         ),
         Div(
             f"{len(nodes)} items",
             cls="text-gray-500 text-sm mt-4",
         ),
+        id="todo-list-container",
+    )
+
+
+def todo_list(nodes, current_filter: str = ""):
+    """Render the full todo list with filter."""
+    return Div(
+        filter_input(current_filter),
+        todo_list_items(nodes),
     )
 
 
