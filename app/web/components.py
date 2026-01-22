@@ -20,6 +20,54 @@ from fasthtml.common import (
     Ul,
 )
 
+# Status tag color definitions (background, text)
+STATUS_TAG_COLORS = {
+    "BACKLOG": ("bg-gray-600", "text-white"),
+    "BLOCKED": ("bg-red-800", "text-red-200"),
+    "TODO": ("bg-yellow-600", "text-yellow-100"),
+    "WIP": ("bg-blue-600", "text-blue-100"),
+    "TEST": ("bg-purple-600", "text-purple-100"),
+    "DONE": ("bg-green-700", "text-green-100"),
+}
+
+
+def status_tag_badge(status_tag: str | None):
+    """Render a colored status tag badge."""
+    if not status_tag:
+        return ""
+
+    bg_color, text_color = STATUS_TAG_COLORS.get(status_tag, ("bg-gray-600", "text-white"))
+    return Span(
+        f"#{status_tag}",
+        cls=f"text-xs px-2 py-1 rounded {bg_color} {text_color}",
+    )
+
+
+def render_node_name(name: str | None, is_completed: bool = False):
+    """Render a node name with HTML support for colored spans."""
+    name_content = NotStr(name) if name else "(unnamed)"
+    completed_cls = "line-through text-gray-500" if is_completed else "text-gray-100"
+    return Span(name_content, cls=completed_cls)
+
+
+def filter_input_field(current_filter: str = "", target_url: str = "/web/todos", htmx_target: str = "#todo-list-container"):
+    """Render a reusable filter input component."""
+    return Form(
+        Input(
+            type="text",
+            name="filter_text",
+            value=current_filter,
+            placeholder="Filter by name or project (comma-separated)...",
+            cls="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg "
+            "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
+            hx_get=target_url,
+            hx_trigger="keyup changed delay:300ms",
+            hx_target=htmx_target,
+            hx_push_url="true",
+        ),
+        cls="mb-4",
+    )
+
 
 def base_page(title: str, *content):
     """Base page template with Tailwind CSS dark theme."""
@@ -121,9 +169,6 @@ def todo_item(node):
     is_completed = node.completed_at is not None
     checkbox_cls = "form-checkbox h-5 w-5 text-blue-600 rounded border-gray-600 bg-gray-700"
 
-    # Render node name as HTML to support Workflowy's colored spans
-    name_content = NotStr(node.name) if node.name else "(unnamed)"
-
     return Li(
         Div(
             Input(
@@ -135,20 +180,14 @@ def todo_item(node):
                 cls=checkbox_cls,
             ),
             Div(
-                Span(
-                    name_content,
-                    cls=f"text-gray-100 {'line-through text-gray-500' if is_completed else ''}",
-                ),
+                render_node_name(node.name, is_completed),
                 Span(
                     node.breadcrumb or "",
                     cls="text-xs text-gray-500 block",
                 ),
                 cls="ml-3 flex-1",
             ),
-            Span(
-                f"#{node.status_tag}" if node.status_tag else "",
-                cls="text-xs px-2 py-1 bg-gray-700 rounded text-gray-400",
-            ) if node.status_tag else "",
+            status_tag_badge(node.status_tag),
             cls="flex items-center p-3 bg-gray-800 rounded-lg hover:bg-gray-750",
         ),
         cls="mb-2",
@@ -157,22 +196,8 @@ def todo_item(node):
 
 
 def filter_input(current_filter: str = ""):
-    """Render the filter input component."""
-    return Form(
-        Input(
-            type="text",
-            name="filter_text",
-            value=current_filter,
-            placeholder="Filter by name or project (comma-separated)...",
-            cls="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg "
-            "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
-            hx_get="/web/todos",
-            hx_trigger="keyup changed delay:300ms",
-            hx_target="#todo-list-container",
-            hx_push_url="true",
-        ),
-        cls="mb-4",
-    )
+    """Render the filter input component for todos view."""
+    return filter_input_field(current_filter, "/web/todos", "#todo-list-container")
 
 
 def todo_list_items(nodes):

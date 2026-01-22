@@ -3,23 +3,22 @@
 from fasthtml.common import (
     H2,
     Div,
-    Form,
-    Input,
-    NotStr,
     Script,
     Span,
 )
 
 from app.models.schemas import StatusTag
 
-# Kanban column definitions with colors
+from .components import STATUS_TAG_COLORS, filter_input_field, render_node_name
+
+# Kanban column definitions - uses colors from shared STATUS_TAG_COLORS
 KANBAN_COLUMNS = [
-    (StatusTag.BACKLOG, "Backlog", "bg-gray-600"),
-    (StatusTag.BLOCKED, "Blocked", "bg-red-600"),
-    (StatusTag.TODO, "Todo", "bg-yellow-600"),
-    (StatusTag.WIP, "WIP", "bg-blue-600"),
-    (StatusTag.TEST, "Test", "bg-purple-600"),
-    (StatusTag.DONE, "Done", "bg-green-600"),
+    (StatusTag.BACKLOG, "Backlog"),
+    (StatusTag.BLOCKED, "Blocked"),
+    (StatusTag.TODO, "Todo"),
+    (StatusTag.WIP, "WIP"),
+    (StatusTag.TEST, "Test"),
+    (StatusTag.DONE, "Done"),
 ]
 
 
@@ -27,29 +26,16 @@ def kanban_card(node):
     """Render a single kanban card."""
     is_completed = node.completed_at is not None
 
-    # Render node name as HTML to support Workflowy's colored spans
-    name_content = NotStr(node.name) if node.name else "(unnamed)"
-
     return Div(
         Div(
-            Input(
-                type="checkbox",
-                checked=is_completed,
-                hx_post=f"/api/nodes/{node.id}/{'uncomplete' if is_completed else 'complete'}",
-                hx_swap="none",
-                cls="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-600 bg-gray-700",
-            ),
-            Span(
-                name_content,
-                cls=f"ml-2 text-sm {'line-through text-gray-500' if is_completed else 'text-gray-100'}",
-            ),
-            cls="flex items-start",
+            render_node_name(node.name, is_completed),
+            cls="flex items-start text-sm",
         ),
         Span(
             node.breadcrumb or "",
             cls="text-xs text-gray-500 mt-1 block truncate",
         ),
-        cls="p-3 bg-gray-700 rounded-lg mb-2 cursor-move hover:bg-gray-650 "
+        cls="p-2 bg-gray-700 rounded-lg mb-2 cursor-move hover:bg-gray-650 "
         "border border-gray-600 hover:border-gray-500 transition-colors",
         data_node_id=node.id,
         data_current_status=node.status_tag or "BACKLOG",
@@ -57,60 +43,65 @@ def kanban_card(node):
     )
 
 
-def kanban_column(status: StatusTag, title: str, color: str, nodes):
+def kanban_column(status: StatusTag, title: str, nodes):
     """Render a kanban column."""
     column_nodes = [n for n in nodes if (n.status_tag or "BACKLOG") == status.value]
     # Sort by color priority within each column
     column_nodes.sort(key=lambda n: (n.color_priority, n.priority))
+    count = len(column_nodes)
+
+    # Get color from shared STATUS_TAG_COLORS
+    bg_color, _ = STATUS_TAG_COLORS.get(status.value, ("bg-gray-600", "text-white"))
 
     return Div(
+        # Expanded header (visible when not collapsed)
         Div(
             H2(
                 title,
                 cls="font-semibold text-gray-100",
             ),
             Span(
-                str(len(column_nodes)),
-                cls=f"ml-2 px-2 py-0.5 text-xs rounded-full {color} text-white",
+                str(count),
+                cls=f"ml-2 px-2 py-0.5 text-xs rounded-full {bg_color} text-white",
             ),
-            cls="flex items-center mb-3 pb-2 border-b border-gray-700",
+            cls="flex items-center mb-3 pb-2 border-b border-gray-700 cursor-pointer column-header",
         ),
+        # Collapsed header (visible when collapsed)
+        Div(
+            Span(
+                str(count),
+                cls=f"px-2 py-0.5 text-xs rounded-full {bg_color} text-white mb-2",
+            ),
+            Span(
+                title,
+                cls="font-semibold text-gray-100 writing-vertical",
+            ),
+            cls="hidden flex-col items-center py-2 cursor-pointer collapsed-header",
+        ),
+        # Column content
         Div(
             *[kanban_card(node) for node in column_nodes],
-            cls="kanban-column min-h-[200px] space-y-2",
+            cls="kanban-column min-h-[200px] space-y-2 column-content",
             data_status=status.value,
             id=f"column-{status.value.lower()}",
         ),
-        cls="flex-1 min-w-[200px] max-w-[300px] p-3 bg-gray-800 rounded-lg",
+        cls="flex-1 min-w-0 p-3 bg-gray-800 rounded-lg kanban-column-wrapper",
+        data_column=status.value,
     )
 
 
 def kanban_board(nodes):
     """Render the full kanban board."""
     return Div(
-        *[kanban_column(status, title, color, nodes) for status, title, color in KANBAN_COLUMNS],
-        cls="flex gap-4 overflow-x-auto pb-4",
+        *[kanban_column(status, title, nodes) for status, title in KANBAN_COLUMNS],
+        cls="flex gap-4 pb-4",
         id="kanban-board",
     )
 
 
 def kanban_filter_input(current_filter: str = ""):
     """Render the kanban filter input."""
-    return Form(
-        Input(
-            type="text",
-            name="filter_text",
-            value=current_filter,
-            placeholder="Filter by name or project (comma-separated)...",
-            cls="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg "
-            "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
-            hx_get="/web/kanban",
-            hx_trigger="keyup changed delay:300ms",
-            hx_target="#kanban-board-container",
-            hx_push_url="true",
-        ),
-        cls="mb-4",
-    )
+    return filter_input_field(current_filter, "/web/kanban", "#kanban-board-container")
 
 
 def kanban_scripts():
@@ -118,10 +109,14 @@ def kanban_scripts():
     return Script("""
         document.addEventListener('DOMContentLoaded', function() {
             initKanban();
+            initColumnToggle();
+            restoreCollapsedState();
         });
 
         document.addEventListener('htmx:afterSwap', function() {
             initKanban();
+            initColumnToggle();
+            restoreCollapsedState();
         });
 
         function initKanban() {
@@ -162,6 +157,51 @@ def kanban_scripts():
                         }
                     }
                 });
+            });
+        }
+
+        function initColumnToggle() {
+            // Use event delegation for column header clicks
+            document.querySelectorAll('.column-header, .collapsed-header').forEach(function(header) {
+                if (header._toggleInit) return; // Already initialized
+                header._toggleInit = true;
+
+                header.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const wrapper = this.closest('.kanban-column-wrapper');
+                    if (wrapper) {
+                        toggleColumn(wrapper);
+                    }
+                });
+            });
+        }
+
+        function toggleColumn(wrapper) {
+            const columnName = wrapper.dataset.column;
+            const isCollapsed = wrapper.classList.toggle('collapsed');
+
+            // Save state to localStorage
+            const collapsedColumns = JSON.parse(localStorage.getItem('kanban-collapsed') || '[]');
+            if (isCollapsed) {
+                if (!collapsedColumns.includes(columnName)) {
+                    collapsedColumns.push(columnName);
+                }
+            } else {
+                const index = collapsedColumns.indexOf(columnName);
+                if (index > -1) {
+                    collapsedColumns.splice(index, 1);
+                }
+            }
+            localStorage.setItem('kanban-collapsed', JSON.stringify(collapsedColumns));
+        }
+
+        function restoreCollapsedState() {
+            const collapsedColumns = JSON.parse(localStorage.getItem('kanban-collapsed') || '[]');
+            collapsedColumns.forEach(function(columnName) {
+                const wrapper = document.querySelector(`.kanban-column-wrapper[data-column="${columnName}"]`);
+                if (wrapper) {
+                    wrapper.classList.add('collapsed');
+                }
             });
         }
     """)

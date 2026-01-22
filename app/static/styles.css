@@ -170,3 +170,37 @@ a {
 a:hover {
     color: #93c5fd;
 }
+
+/* Kanban collapsible columns */
+.kanban-column-wrapper {
+    transition: flex 0.2s ease, min-width 0.2s ease, width 0.2s ease;
+}
+
+.kanban-column-wrapper .collapsed-header {
+    display: none;
+}
+
+.kanban-column-wrapper.collapsed {
+    flex: 0 0 auto !important;
+    min-width: 48px !important;
+    width: 48px !important;
+}
+
+.kanban-column-wrapper.collapsed .column-header {
+    display: none;
+}
+
+.kanban-column-wrapper.collapsed .collapsed-header {
+    display: flex;
+}
+
+.kanban-column-wrapper.collapsed .column-content {
+    display: none;
+}
+
+/* Vertical text for collapsed columns */
+.writing-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+}
