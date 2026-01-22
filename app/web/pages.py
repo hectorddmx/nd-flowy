@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
+from fasthtml.common import to_xml
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,7 +42,7 @@ async def todos_page(
             "Todos - Workflowy Flow",
             empty_state("No WIP node found. Click refresh to sync from Workflowy."),
         )
-        return HTMLResponse(str(page))
+        return HTMLResponse(to_xml(page))
 
     # Get todo nodes
     query = select(NodeCache).where(
@@ -63,13 +64,13 @@ async def todos_page(
 
     # Check if this is an HTMX request (partial update)
     if request.headers.get("HX-Request"):
-        return HTMLResponse(str(todo_list_items(nodes)))
+        return HTMLResponse(to_xml(todo_list_items(nodes)))
 
     page = base_page(
         "Todos - Workflowy Flow",
         todo_list(nodes, filter_text),
     )
-    return HTMLResponse(str(page))
+    return HTMLResponse(to_xml(page))
 
 
 @router.get("/kanban", response_class=HTMLResponse)
@@ -88,7 +89,7 @@ async def kanban_view(
             "Kanban - Workflowy Flow",
             empty_state("No WIP node found. Click refresh to sync from Workflowy."),
         )
-        return HTMLResponse(str(page))
+        return HTMLResponse(to_xml(page))
 
     # Get all todo nodes under WIP
     query = select(NodeCache).where(
@@ -110,13 +111,13 @@ async def kanban_view(
 
     # Check if this is an HTMX request (partial update)
     if request.headers.get("HX-Request"):
-        return HTMLResponse(str(kanban_page(nodes, filter_text, partial=True)))
+        return HTMLResponse(to_xml(kanban_page(nodes, filter_text, partial=True)))
 
     page = base_page(
         "Kanban - Workflowy Flow",
         kanban_page(nodes, filter_text),
     )
-    return HTMLResponse(str(page))
+    return HTMLResponse(to_xml(page))
 
 
 @router.post("/refresh", response_class=HTMLResponse)
@@ -193,4 +194,4 @@ async def refresh_and_show(
     result = await db.execute(query)
     todo_nodes = result.scalars().all()
 
-    return HTMLResponse(str(todo_list(todo_nodes, "")))
+    return HTMLResponse(to_xml(todo_list(todo_nodes, "")))

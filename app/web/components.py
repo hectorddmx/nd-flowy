@@ -15,6 +15,7 @@ from fasthtml.common import (
     NotStr,
     Script,
     Span,
+    Style,
     Title,
     Ul,
 )
@@ -35,6 +36,8 @@ def base_page(title: str, *content):
             Script(src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"),
             # Custom styles for dark theme
             Link(rel="stylesheet", href="/static/styles.css"),
+            # Ensure html/body have dark background
+            Style("html, body { background-color: #111827; margin: 0; padding: 0; }"),
             # Skeleton loading script
             Script("""
                 function showSkeleton() {
