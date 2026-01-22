@@ -14,14 +14,6 @@ from app.core.database import get_db
 from app.models.database import NodeCache, WipConfig
 from app.services.workflowy_client import WorkflowyClient
 
-
-def get_workflowy_client() -> WorkflowyClient:
-    """Get Workflowy client instance."""
-    return WorkflowyClient(
-        api_key=settings.wf_api_key,
-        base_url=settings.wf_api_base_url,
-    )
-
 from .components import (
     base_page,
     empty_state,
@@ -32,6 +24,15 @@ from .components import (
     todo_list_items,
 )
 from .kanban import kanban_board_items, kanban_filter_input, kanban_page
+
+
+def get_workflowy_client() -> WorkflowyClient:
+    """Get Workflowy client instance."""
+    return WorkflowyClient(
+        api_key=settings.wf_api_key,
+        base_url=settings.wf_api_base_url,
+    )
+
 
 router = APIRouter(prefix="/web", tags=["web"])
 
@@ -152,7 +153,9 @@ async def kanban_view(
     # Check if this is an HTMX partial update (from filter input)
     # Filter requests target #kanban-board-container, nav requests target #main-content
     if request.headers.get("HX-Target") == "kanban-board-container":
-        return HTMLResponse(to_xml(kanban_page(nodes, filter_text, show_completed_bool, partial=True)))
+        return HTMLResponse(
+            to_xml(kanban_page(nodes, filter_text, show_completed_bool, partial=True))
+        )
 
     # HTMX navigation request - return full content without base page
     if request.headers.get("HX-Request"):
@@ -239,37 +242,53 @@ async def refresh_and_show(
                 "Workflowy API allows 1 request per minute. Please wait and try again.",
             )
             # Return error with current cached data
-            query = select(NodeCache).where(
-                NodeCache.layout_mode == "todo",
-                NodeCache.breadcrumb.like("WIP%"),
-                NodeCache.completed_at.is_(None),
-            ).order_by(NodeCache.color_priority, NodeCache.priority)
+            query = (
+                select(NodeCache)
+                .where(
+                    NodeCache.layout_mode == "todo",
+                    NodeCache.breadcrumb.like("WIP%"),
+                    NodeCache.completed_at.is_(None),
+                )
+                .order_by(NodeCache.color_priority, NodeCache.priority)
+            )
             result = await db.execute(query)
             todo_nodes = result.scalars().all()
 
             if is_kanban:
-                return HTMLResponse(to_xml(Div(
-                    kanban_filter_input("", False),
-                    error,
-                    kanban_board_items(todo_nodes),
-                )))
+                return HTMLResponse(
+                    to_xml(
+                        Div(
+                            kanban_filter_input("", False),
+                            error,
+                            kanban_board_items(todo_nodes),
+                        )
+                    )
+                )
             else:
-                return HTMLResponse(to_xml(Div(
-                    filter_input("", False),
-                    error,
-                    todo_list_items(todo_nodes),
-                )))
+                return HTMLResponse(
+                    to_xml(
+                        Div(
+                            filter_input("", False),
+                            error,
+                            todo_list_items(todo_nodes),
+                        )
+                    )
+                )
         raise
 
     finally:
         await client.close()
 
     # Get nodes (hide completed by default)
-    query = select(NodeCache).where(
-        NodeCache.layout_mode == "todo",
-        NodeCache.breadcrumb.like("WIP%"),
-        NodeCache.completed_at.is_(None),
-    ).order_by(NodeCache.color_priority, NodeCache.priority)
+    query = (
+        select(NodeCache)
+        .where(
+            NodeCache.layout_mode == "todo",
+            NodeCache.breadcrumb.like("WIP%"),
+            NodeCache.completed_at.is_(None),
+        )
+        .order_by(NodeCache.color_priority, NodeCache.priority)
+    )
 
     result = await db.execute(query)
     todo_nodes = result.scalars().all()

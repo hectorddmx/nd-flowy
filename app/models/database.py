@@ -36,9 +36,7 @@ class NodeCache(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     modified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    cached_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), nullable=False
-    )
+    cached_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     breadcrumb: Mapped[str | None] = mapped_column(Text, nullable=True)
     status_tag: Mapped[str | None] = mapped_column(String(50), nullable=True)
     color_priority: Mapped[int] = mapped_column(Integer, default=99)
@@ -51,6 +49,4 @@ class FilterHistory(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     filter_text: Mapped[str] = mapped_column(Text, nullable=False)
-    used_at: Mapped[datetime] = mapped_column(
-        DateTime, server_default=func.now(), nullable=False
-    )
+    used_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)

@@ -1,7 +1,5 @@
 """Tests for kanban board logic."""
 
-import pytest
-
 from app.models.schemas import StatusTag
 from app.services.workflowy_client import WorkflowyClient
 

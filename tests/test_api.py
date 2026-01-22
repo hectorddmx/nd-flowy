@@ -3,8 +3,6 @@
 import pytest
 from httpx import AsyncClient
 
-from app.models.database import FilterHistory, NodeCache, WipConfig
-
 
 @pytest.mark.asyncio
 async def test_health_check(client: AsyncClient):
