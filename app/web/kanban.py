@@ -1,9 +1,9 @@
 """Kanban board components."""
 
 from fasthtml.common import (
+    H2,
     Div,
     Form,
-    H2,
     Input,
     Script,
     Span,

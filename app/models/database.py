@@ -41,6 +41,7 @@ class NodeCache(Base):
     )
     breadcrumb: Mapped[str | None] = mapped_column(Text, nullable=True)
     status_tag: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    color_priority: Mapped[int] = mapped_column(Integer, default=99)
 
 
 class FilterHistory(Base):

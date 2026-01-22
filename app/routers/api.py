@@ -12,7 +12,6 @@ from app.models.schemas import (
     FilterHistoryResponse,
     NodeCacheResponse,
     RefreshResponse,
-    StatusTag,
     StatusUpdateRequest,
 )
 from app.services.workflowy_client import WorkflowyClient
@@ -80,6 +79,7 @@ async def refresh_nodes(
                 modified_at=modified_at,
                 breadcrumb=breadcrumb,
                 status_tag=status_tag.value if status_tag else None,
+                color_priority=client.get_color_priority(node.get("name")),
             )
             db.add(node_cache)
             cached_count += 1
@@ -101,7 +101,7 @@ async def get_nodes(
     query = select(NodeCache)
     if parent_id:
         query = query.where(NodeCache.parent_id == parent_id)
-    query = query.order_by(NodeCache.priority)
+    query = query.order_by(NodeCache.color_priority, NodeCache.priority)
 
     result = await db.execute(query)
     nodes = result.scalars().all()
@@ -136,7 +136,7 @@ async def get_todos(
                 NodeCache.name.ilike(f"%{f}%") | NodeCache.breadcrumb.ilike(f"%{f}%")
             )
 
-    query = query.order_by(NodeCache.priority)
+    query = query.order_by(NodeCache.color_priority, NodeCache.priority)
     result = await db.execute(query)
     nodes = result.scalars().all()
     return nodes

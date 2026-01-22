@@ -48,6 +48,7 @@ class NodeCacheResponse(BaseModel):
     cached_at: datetime
     breadcrumb: str | None = None
     status_tag: StatusTag | None = None
+    color_priority: int = 99
 
 
 class FilterHistoryCreate(BaseModel):

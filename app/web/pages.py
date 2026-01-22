@@ -10,7 +10,7 @@ from app.core.database import get_db
 from app.models.database import NodeCache, WipConfig
 from app.services.workflowy_client import WorkflowyClient
 
-from .components import base_page, empty_state, skeleton_list, todo_list, todo_list_items
+from .components import base_page, empty_state, todo_list, todo_list_items
 from .kanban import kanban_page
 
 router = APIRouter(prefix="/web", tags=["web"])
@@ -57,7 +57,7 @@ async def todos_page(
                 NodeCache.name.ilike(f"%{f}%") | NodeCache.breadcrumb.ilike(f"%{f}%")
             )
 
-    query = query.order_by(NodeCache.priority)
+    query = query.order_by(NodeCache.color_priority, NodeCache.priority)
     result = await db.execute(query)
     nodes = result.scalars().all()
 
@@ -104,7 +104,7 @@ async def kanban_view(
                 NodeCache.name.ilike(f"%{f}%") | NodeCache.breadcrumb.ilike(f"%{f}%")
             )
 
-    query = query.order_by(NodeCache.priority)
+    query = query.order_by(NodeCache.color_priority, NodeCache.priority)
     result = await db.execute(query)
     nodes = result.scalars().all()
 
@@ -175,6 +175,7 @@ async def refresh_and_show(
                 modified_at=modified_at,
                 breadcrumb=breadcrumb,
                 status_tag=status_tag.value if status_tag else None,
+                color_priority=client.get_color_priority(node.get("name")),
             )
             db.add(node_cache)
 
@@ -187,7 +188,7 @@ async def refresh_and_show(
     query = select(NodeCache).where(
         NodeCache.layout_mode == "todo",
         NodeCache.breadcrumb.like("WIP%"),
-    ).order_by(NodeCache.priority)
+    ).order_by(NodeCache.color_priority, NodeCache.priority)
 
     result = await db.execute(query)
     todo_nodes = result.scalars().all()

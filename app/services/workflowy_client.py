@@ -12,6 +12,24 @@ class WorkflowyClient:
     # Regex to extract status tags from node names
     STATUS_TAG_PATTERN = re.compile(r"#(BACKLOG|BLOCKED|TODO|WIP|TEST|DONE)\b", re.IGNORECASE)
 
+    # Regex to extract Workflowy color classes from HTML spans
+    COLOR_PATTERN = re.compile(r'class="[^"]*bc-(red|orange|yellow|green|blue|purple|pink|sky|teal|gray)[^"]*"')
+
+    # Color priority for sorting (lower = higher priority, shown first)
+    COLOR_PRIORITY = {
+        "red": 1,
+        "orange": 2,
+        "yellow": 3,
+        "pink": 4,
+        "purple": 5,
+        "blue": 6,
+        "sky": 7,
+        "teal": 8,
+        "green": 9,
+        "gray": 10,
+        None: 99,  # No color = lowest priority
+    }
+
     def __init__(self, api_key: str, base_url: str = "https://workflowy.com/api/v1"):
         self.api_key = api_key
         self.base_url = base_url
@@ -141,6 +159,22 @@ class WorkflowyClient:
             tag = match.group(1).upper()
             return StatusTag(tag)
         return None
+
+    @classmethod
+    def extract_color(cls, name: str | None) -> str | None:
+        """Extract Workflowy color class from node name HTML."""
+        if not name:
+            return None
+        match = cls.COLOR_PATTERN.search(name)
+        if match:
+            return match.group(1)
+        return None
+
+    @classmethod
+    def get_color_priority(cls, name: str | None) -> int:
+        """Get sorting priority based on color (lower = higher priority)."""
+        color = cls.extract_color(name)
+        return cls.COLOR_PRIORITY.get(color, 99)
 
     @classmethod
     def update_status_tag(cls, name: str | None, new_status: StatusTag) -> str:
