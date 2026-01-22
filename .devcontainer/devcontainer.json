@@ -1,14 +1,13 @@
 {
   "name": "Workflowy Flow",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "initializeCommand": "mise exec -- sh -c 'echo WF_API_KEY=$(printenv WF_API_KEY) > .env.devcontainer' 2>/dev/null || true",
+  "initializeCommand": "just devcontainer-env 2>/dev/null || mise exec -- sh -c 'echo WF_API_KEY=$(printenv WF_API_KEY) > .env.devcontainer'",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -37,13 +36,5 @@
   },
   "postCreateCommand": "uv sync",
   "postStartCommand": "echo 'Dev container ready. Run: uv run uvicorn app.main:app --reload --host 0.0.0.0'",
-  "remoteUser": "root",
-  "workspaceFolder": "/app",
-  "mounts": [
-    "source=${localWorkspaceFolder}/workflowy_flow.db,target=/app/workflowy_flow.db,type=bind,consistency=cached"
-  ],
-  "runArgs": ["--env-file", "${localWorkspaceFolder}/.env.devcontainer"],
-  "containerEnv": {
-    "DATABASE_PATH": "/app/workflowy_flow.db"
-  }
+  "remoteUser": "root"
 }
