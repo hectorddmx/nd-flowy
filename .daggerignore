@@ -1,0 +1,66 @@
+# Dagger ignore file - excludes files from being sent to Dagger engine
+# This significantly speeds up builds by not copying unnecessary data
+
+# Git
+.git/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python virtual environments and caches
+.venv/
+venv/
+ENV/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+*.pyc
+*.pyo
+*.pyd
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Coverage reports
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Local databases (will be recreated)
+*.db
+*.sqlite
+*.sqlite3
+
+# Local configuration and secrets
+mise.local.toml
+.env
+.env.*
+
+# Documentation and non-essential files
+docs/
+*.md
+!README.md
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Docker (not needed inside Dagger)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Dev containers
+.devcontainer/

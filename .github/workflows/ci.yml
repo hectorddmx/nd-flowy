@@ -1,0 +1,76 @@
+# Workflowy Flow CI Pipeline
+# Runs linting and tests for Python/FastAPI/FastHTML via Dagger
+# This ensures local and CI environments are identical: `dagger call ci --source=.`
+
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      # Python files
+      - 'app/**/*.py'
+      - 'tests/**/*.py'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      # Dagger pipeline changes
+      - '.dagger/**'
+      - 'dagger.json'
+      # CI workflow changes
+      - '.github/workflows/ci.yml'
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      # Python files
+      - 'app/**/*.py'
+      - 'tests/**/*.py'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      # Dagger pipeline changes
+      - '.dagger/**'
+      - 'dagger.json'
+      # CI workflow changes
+      - '.github/workflows/ci.yml'
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Single CI job that runs everything via Dagger
+  # This ensures local `dagger call ci --source=.` matches GitHub CI exactly
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dagger
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: "0.19.10"
+
+      - name: Run CI pipeline via Dagger
+        run: dagger call ci --source=. --skip-build=true
+        env:
+          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+
+      - name: CI Summary
+        if: always()
+        run: |
+          echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "CI pipeline completed via Dagger" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To run the same checks locally:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "just dagger-ci-quick" >> $GITHUB_STEP_SUMMARY
+          echo "# or directly:" >> $GITHUB_STEP_SUMMARY
+          echo "dagger call ci --source=. --skip-build=true" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

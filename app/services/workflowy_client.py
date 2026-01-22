@@ -13,7 +13,9 @@ class WorkflowyClient:
     STATUS_TAG_PATTERN = re.compile(r"#(BACKLOG|BLOCKED|TODO|WIP|TEST|DONE)\b", re.IGNORECASE)
 
     # Regex to extract Workflowy color classes from HTML spans
-    COLOR_PATTERN = re.compile(r'class="[^"]*bc-(red|orange|yellow|green|blue|purple|pink|sky|teal|gray)[^"]*"')
+    COLOR_PATTERN = re.compile(
+        r'class="[^"]*bc-(red|orange|yellow|green|blue|purple|pink|sky|teal|gray)[^"]*"'
+    )
 
     # Color priority for sorting (lower = higher priority, shown first)
     COLOR_PRIORITY = {
@@ -94,7 +96,9 @@ class WorkflowyClient:
         response = await client.post(f"/nodes/{node_id}/uncomplete")
         response.raise_for_status()
 
-    async def update_node(self, node_id: str, name: str | None = None, note: str | None = None) -> None:
+    async def update_node(
+        self, node_id: str, name: str | None = None, note: str | None = None
+    ) -> None:
         """POST /nodes/:id - update a node's name and/or note."""
         client = await self._get_client()
         data = {}

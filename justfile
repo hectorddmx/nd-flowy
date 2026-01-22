@@ -199,3 +199,39 @@ clean:
 clean-all: clean
     rm -rf .venv workflowy_flow.db
     @echo "Cleaned all including .venv and database"
+
+### ================================ ###
+### Dagger CI/CD
+### ================================ ###
+
+# Note: --progress=plain disables the TUI for cleaner CI output.
+
+# Run full Dagger CI pipeline (lint, test, build)
+[group('dagger')]
+dagger-ci:
+    dagger call --progress=plain ci --source=.
+
+# Run quick Dagger CI (lint + test only, no build)
+[group('dagger')]
+dagger-ci-quick:
+    dagger call --progress=plain ci --source=. --skip-build=true
+
+# Run linting via Dagger
+[group('dagger')]
+dagger-lint:
+    dagger call --progress=plain lint --source=.
+
+# Run tests via Dagger
+[group('dagger')]
+dagger-test:
+    dagger call --progress=plain test --source=.
+
+# Run tests with coverage via Dagger
+[group('dagger')]
+dagger-test-cov:
+    dagger call --progress=plain test --source=. --coverage=true
+
+# Build via Dagger
+[group('dagger')]
+dagger-build:
+    dagger call --progress=plain build-and-verify --source=.
