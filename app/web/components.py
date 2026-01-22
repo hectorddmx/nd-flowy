@@ -217,7 +217,10 @@ def base_page(title: str, *content):
                             hx_disabled_elt="this",
                             cls="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 "
                             "disabled:opacity-50 disabled:cursor-wait",
-                            **{"hx-on:htmx:before-request": "showSkeleton()"},
+                            **{
+                                "hx-on:htmx:before-request": "showSkeleton()",
+                                "hx-on:htmx:after-request": "this.classList.remove('htmx-request')",
+                            },
                         ),
                         cls="flex gap-2",
                     ),
