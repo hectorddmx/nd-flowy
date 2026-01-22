@@ -141,7 +141,7 @@ async def refresh_and_show(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Refresh data from Workflowy and return updated todo list."""
+    """Refresh data from Workflowy and return updated view."""
     client = WorkflowyClient(
         api_key=settings.wf_api_key,
         base_url=settings.wf_api_base_url,
@@ -201,7 +201,11 @@ async def refresh_and_show(
     finally:
         await client.close()
 
-    # Now return the updated todo list (hide completed by default)
+    # Determine which view to return based on the current URL
+    current_url = request.headers.get("HX-Current-URL", "")
+    is_kanban = "/kanban" in current_url
+
+    # Get nodes (hide completed by default)
     query = select(NodeCache).where(
         NodeCache.layout_mode == "todo",
         NodeCache.breadcrumb.like("WIP%"),
@@ -211,4 +215,7 @@ async def refresh_and_show(
     result = await db.execute(query)
     todo_nodes = result.scalars().all()
 
-    return HTMLResponse(to_xml(todo_list(todo_nodes, "", False)))
+    if is_kanban:
+        return HTMLResponse(to_xml(kanban_page(todo_nodes, "", False)))
+    else:
+        return HTMLResponse(to_xml(todo_list(todo_nodes, "", False)))

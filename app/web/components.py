@@ -129,7 +129,39 @@ def base_page(title: str, *content):
             Script("""
                 function showSkeleton() {
                     const main = document.getElementById('main-content');
-                    if (main) {
+                    if (!main) return;
+
+                    const isKanban = window.location.pathname.includes('/kanban');
+
+                    if (isKanban) {
+                        // Kanban skeleton
+                        main.innerHTML = `
+                            <div>
+                                <div class="mb-4">
+                                    <div class="h-10 bg-gray-800 rounded-lg w-full animate-pulse"></div>
+                                </div>
+                                <div class="flex gap-4 pb-4">
+                                    ${Array(6).fill().map(() => `
+                                        <div class="flex-1 min-w-0 p-3 bg-gray-800 rounded-lg">
+                                            <div class="flex items-center mb-3 pb-2 border-b border-gray-700">
+                                                <div class="h-5 bg-gray-700 rounded w-20 animate-pulse"></div>
+                                                <div class="ml-2 h-5 w-6 bg-gray-700 rounded-full animate-pulse"></div>
+                                            </div>
+                                            <div class="space-y-2 min-h-[200px]">
+                                                ${Array(3).fill().map(() => `
+                                                    <div class="p-2 bg-gray-700 rounded-lg">
+                                                        <div class="h-4 bg-gray-600 rounded w-full animate-pulse"></div>
+                                                        <div class="h-3 bg-gray-600 rounded w-2/3 mt-2 animate-pulse"></div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Todos skeleton
                         main.innerHTML = `
                             <div>
                                 <div class="mb-4">
