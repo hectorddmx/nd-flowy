@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - WF_API_KEY=${WF_API_KEY}
+      - DATABASE_PATH=/data/workflowy_flow.db
+    volumes:
+      - workflowy-data:/data
+    restart: unless-stopped
+
+volumes:
+  workflowy-data:
