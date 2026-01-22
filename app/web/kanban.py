@@ -197,11 +197,23 @@ def kanban_scripts():
 
         function restoreCollapsedState() {
             const collapsedColumns = JSON.parse(localStorage.getItem('kanban-collapsed') || '[]');
+            if (collapsedColumns.length === 0) return;
+
+            // Disable transitions while restoring state
+            const wrappers = document.querySelectorAll('.kanban-column-wrapper');
+            wrappers.forEach(w => w.style.transition = 'none');
+
             collapsedColumns.forEach(function(columnName) {
                 const wrapper = document.querySelector(`.kanban-column-wrapper[data-column="${columnName}"]`);
                 if (wrapper) {
                     wrapper.classList.add('collapsed');
                 }
+            });
+
+            // Force reflow, then re-enable transitions
+            wrappers[0]?.offsetHeight;
+            requestAnimationFrame(() => {
+                wrappers.forEach(w => w.style.transition = '');
             });
         }
     """)
