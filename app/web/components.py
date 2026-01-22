@@ -1,5 +1,7 @@
 """Reusable FastHTML components."""
 
+import re
+
 from fasthtml.common import (
     Button,
     Div,
@@ -20,6 +22,9 @@ from fasthtml.common import (
     Ul,
 )
 
+# Regex to match status tags in node names
+STATUS_TAG_PATTERN = re.compile(r"\s*#(BACKLOG|BLOCKED|TODO|WIP|TEST|DONE)\b", re.IGNORECASE)
+
 # Status tag color definitions (background, text)
 STATUS_TAG_COLORS = {
     "BACKLOG": ("bg-gray-600", "text-white"),
@@ -29,6 +34,13 @@ STATUS_TAG_COLORS = {
     "TEST": ("bg-purple-600", "text-purple-100"),
     "DONE": ("bg-green-700", "text-green-100"),
 }
+
+
+def strip_status_tag(name: str | None) -> str:
+    """Remove status tag from node name."""
+    if not name:
+        return ""
+    return STATUS_TAG_PATTERN.sub("", name).strip()
 
 
 def status_tag_badge(status_tag: str | None):
@@ -44,8 +56,9 @@ def status_tag_badge(status_tag: str | None):
 
 
 def render_node_name(name: str | None, is_completed: bool = False):
-    """Render a node name with HTML support for colored spans."""
-    name_content = NotStr(name) if name else "(unnamed)"
+    """Render a node name with HTML support, stripping status tags."""
+    clean_name = strip_status_tag(name) if name else ""
+    name_content = NotStr(clean_name) if clean_name else "(unnamed)"
     completed_cls = "line-through text-gray-500" if is_completed else "text-gray-100"
     return Span(name_content, cls=completed_cls)
 
