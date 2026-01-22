@@ -78,9 +78,14 @@ async def todos_page(
     result = await db.execute(query)
     nodes = result.scalars().all()
 
-    # Check if this is an HTMX request (partial update)
-    if request.headers.get("HX-Request"):
+    # Check if this is an HTMX partial update (from filter input)
+    # Filter requests target #todo-list-container, nav requests target #main-content
+    if request.headers.get("HX-Target") == "todo-list-container":
         return HTMLResponse(to_xml(todo_list_items(nodes)))
+
+    # HTMX navigation request - return full content without base page
+    if request.headers.get("HX-Request"):
+        return HTMLResponse(to_xml(todo_list(nodes, filter_text, show_completed_bool)))
 
     page = base_page(
         "Todos - Workflowy Flow",
@@ -133,9 +138,14 @@ async def kanban_view(
     result = await db.execute(query)
     nodes = result.scalars().all()
 
-    # Check if this is an HTMX request (partial update)
-    if request.headers.get("HX-Request"):
+    # Check if this is an HTMX partial update (from filter input)
+    # Filter requests target #kanban-board-container, nav requests target #main-content
+    if request.headers.get("HX-Target") == "kanban-board-container":
         return HTMLResponse(to_xml(kanban_page(nodes, filter_text, show_completed_bool, partial=True)))
+
+    # HTMX navigation request - return full content without base page
+    if request.headers.get("HX-Request"):
+        return HTMLResponse(to_xml(kanban_page(nodes, filter_text, show_completed_bool)))
 
     page = base_page(
         "Kanban - Workflowy Flow",

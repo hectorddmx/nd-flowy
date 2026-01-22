@@ -197,12 +197,10 @@ def kanban_scripts():
 
         function restoreCollapsedState() {
             const collapsedColumns = JSON.parse(localStorage.getItem('kanban-collapsed') || '[]');
-            if (collapsedColumns.length === 0) return;
+            const board = document.getElementById('kanban-board');
+            if (!board) return;
 
-            // Disable transitions while restoring state
-            const wrappers = document.querySelectorAll('.kanban-column-wrapper');
-            wrappers.forEach(w => w.style.transition = 'none');
-
+            // Apply collapsed state immediately (transitions disabled via CSS)
             collapsedColumns.forEach(function(columnName) {
                 const wrapper = document.querySelector(`.kanban-column-wrapper[data-column="${columnName}"]`);
                 if (wrapper) {
@@ -210,11 +208,10 @@ def kanban_scripts():
                 }
             });
 
-            // Force reflow, then re-enable transitions
-            wrappers[0]?.offsetHeight;
-            requestAnimationFrame(() => {
-                wrappers.forEach(w => w.style.transition = '');
-            });
+            // Enable transitions after a brief delay
+            setTimeout(() => {
+                board.classList.add('transitions-ready');
+            }, 50);
         }
     """)
 

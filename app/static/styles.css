@@ -171,8 +171,12 @@ a:hover {
     color: #93c5fd;
 }
 
-/* Kanban collapsible columns */
+/* Kanban collapsible columns - transitions only after page init */
 .kanban-column-wrapper {
+    transition: none;
+}
+
+#kanban-board.transitions-ready .kanban-column-wrapper {
     transition: flex 0.2s ease, min-width 0.2s ease, width 0.2s ease;
 }
 
