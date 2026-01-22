@@ -5,6 +5,7 @@ from fasthtml.common import (
     Div,
     Form,
     Input,
+    NotStr,
     Script,
     Span,
 )
@@ -26,6 +27,9 @@ def kanban_card(node):
     """Render a single kanban card."""
     is_completed = node.completed_at is not None
 
+    # Render node name as HTML to support Workflowy's colored spans
+    name_content = NotStr(node.name) if node.name else "(unnamed)"
+
     return Div(
         Div(
             Input(
@@ -36,7 +40,7 @@ def kanban_card(node):
                 cls="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-600 bg-gray-700",
             ),
             Span(
-                node.name or "(unnamed)",
+                name_content,
                 cls=f"ml-2 text-sm {'line-through text-gray-500' if is_completed else 'text-gray-100'}",
             ),
             cls="flex items-start",
@@ -56,6 +60,8 @@ def kanban_card(node):
 def kanban_column(status: StatusTag, title: str, color: str, nodes):
     """Render a kanban column."""
     column_nodes = [n for n in nodes if (n.status_tag or "BACKLOG") == status.value]
+    # Sort by color priority within each column
+    column_nodes.sort(key=lambda n: (n.color_priority, n.priority))
 
     return Div(
         Div(
@@ -100,7 +106,7 @@ def kanban_filter_input(current_filter: str = ""):
             "text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500",
             hx_get="/web/kanban",
             hx_trigger="keyup changed delay:300ms",
-            hx_target="#kanban-container",
+            hx_target="#kanban-board-container",
             hx_push_url="true",
         ),
         cls="mb-4",
@@ -161,19 +167,22 @@ def kanban_scripts():
     """)
 
 
-def kanban_page(nodes, current_filter: str = "", partial: bool = False):
-    """Render the full kanban page content."""
-    content = Div(
-        kanban_filter_input(current_filter),
+def kanban_board_items(nodes):
+    """Render just the kanban board (for HTMX partial updates)."""
+    return Div(
         kanban_board(nodes),
-        kanban_scripts() if not partial else "",
-        id="kanban-container",
+        kanban_scripts(),
+        id="kanban-board-container",
     )
 
+
+def kanban_page(nodes, current_filter: str = "", partial: bool = False):
+    """Render the full kanban page content."""
     if partial:
-        return content
+        # Return only the board container for HTMX updates
+        return kanban_board_items(nodes)
 
     return Div(
-        content,
-        kanban_scripts(),
+        kanban_filter_input(current_filter),
+        kanban_board_items(nodes),
     )
