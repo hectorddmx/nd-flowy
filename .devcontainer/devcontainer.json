@@ -6,7 +6,8 @@
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/nix:1": {}
+    "ghcr.io/devcontainers/features/nix:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": { "moby": false }
   },
   "initializeCommand": "just devcontainer-env 2>/dev/null || mise exec -- sh -c 'echo WF_API_KEY=$(printenv WF_API_KEY) > .env.devcontainer'",
   "customizations": {
