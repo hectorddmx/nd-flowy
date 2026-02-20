@@ -246,3 +246,51 @@ dagger-test-cov:
 [group('dagger')]
 dagger-build:
     dagger call --progress=plain build-and-verify --source=.
+
+### ================================ ###
+### Security
+### ================================ ###
+
+# Install security scanning tools (trivy, grype, syft, opengrep)
+[group('security')]
+security-setup:
+    brew install trivy grype syft
+    curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
+
+# Run all security scans
+[group('security')]
+security: scan-secrets scan-vulns scan-config scan-sast
+
+# Scan for leaked secrets (trivy + opengrep)
+[group('security')]
+scan-secrets:
+    @echo "==> Trivy secret scan..."
+    trivy fs --scanners secret .
+    @echo ""
+    @echo "==> Opengrep secret scan..."
+    opengrep scan --config "p/secrets" -q .
+    @echo "Secret scans complete."
+
+# Scan dependencies for known vulnerabilities (grype)
+[group('security')]
+scan-vulns:
+    @echo "==> Grype vulnerability scan..."
+    grype dir:.
+
+# Scan container/config files for misconfigurations (trivy)
+[group('security')]
+scan-config:
+    @echo "==> Trivy config scan..."
+    trivy config .devcontainer/
+
+# Run SAST security audit (opengrep)
+[group('security')]
+scan-sast:
+    @echo "==> Opengrep security audit..."
+    opengrep scan --config "p/security-audit" -q .
+    @echo "SAST scan complete."
+
+# Generate Software Bill of Materials (syft)
+[group('security')]
+sbom:
+    syft dir:. -o table
