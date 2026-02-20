@@ -5,7 +5,8 @@
   "workspaceFolder": "/app",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/nix:1": {}
   },
   "initializeCommand": "just devcontainer-env 2>/dev/null || mise exec -- sh -c 'echo WF_API_KEY=$(printenv WF_API_KEY) > .env.devcontainer'",
   "customizations": {
@@ -15,7 +16,8 @@
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
         "tamasfe.even-better-toml",
-        "bradlc.vscode-tailwindcss"
+        "bradlc.vscode-tailwindcss",
+        "ms-python.debugpy"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/app/.venv/bin/python",
@@ -34,7 +36,7 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "uv sync",
+  "postCreateCommand": "nix-env -iA nixpkgs.mise nixpkgs.just && mise trust && uv sync",
   "postStartCommand": "echo 'Dev container ready. Run: uv run uvicorn app.main:app --reload --host 0.0.0.0'",
   "remoteUser": "root"
 }
