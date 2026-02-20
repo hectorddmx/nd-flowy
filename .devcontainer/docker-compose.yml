@@ -6,7 +6,6 @@ services:
     volumes:
       - ..:/app:cached
       - ../.env.devcontainer:/app/.env.devcontainer:ro
-      - ../workflowy_flow.db:/app/workflowy_flow.db:cached
     env_file:
       - ../.env.devcontainer
     environment:
