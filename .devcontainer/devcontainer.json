@@ -37,7 +37,10 @@
       "onAutoForward": "notify"
     }
   },
-  "postCreateCommand": "nix-env -iA nixpkgs.mise nixpkgs.just && mise trust && uv sync",
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/root/.local/bin"
+  },
+  "postCreateCommand": "nix-env -iA nixpkgs.mise nixpkgs.just && mise trust && curl -fsSL https://dl.dagger.io/dagger/install.sh | BIN_DIR=$HOME/.local/bin sh && uv sync",
   "postStartCommand": "echo 'Dev container ready. Run: uv run uvicorn app.main:app --reload --host 0.0.0.0'",
   "remoteUser": "root"
 }
